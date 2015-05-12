@@ -3,10 +3,21 @@ var PP = [
     "发", "额", "眉", "太阳", "睑", "睛", "瞳", "眼袋", "颧", "鼻", "耳", "颊", "颌" 
 ];
 
+var test = true;
 var iOS = false;
 var imageReady = false;
 var current_faces = [];
-var image_orig_width = 0, image_orig_height = 0, image_orig_rotation = 0;
+var factor = {
+    originalW : 0,
+    originalH : 0,
+    originalRotation : 0,
+    displayW : 0,
+    displayH : 0,
+    scaleX : 0,
+    scaleY : 0,
+    paddingX : 0,
+    paddingY : 0
+};
 
 var faceService = new FaceService("559c332de481437084dd03c720a7b750");
 
@@ -79,65 +90,159 @@ function detectFace(img, md, orientation) {
         error(errSize);
     }
     img = $("#imgFile").get(0).files[0];
-    if (true) {
+    if (!test) {
         faceService.detectFaces({
             data: img,
-            success: function(result) {
-                renderImageFaces(result.Faces, orientation);
+            success: function(faces) {
+                renderImageFaces(faces, orientation);
             },
             error: function(msg) {
                 error(msg);
             }
         });
     } else {
-        renderImageFaces(DetectResult.Faces, orientation);
+        renderImageFaces(DetectResult, orientation);
     }
 }
 
+
+function factorX(x) {
+    return Math.round(x * factor.scaleX) + factor.paddingX;
+}
+
+function factorY(y) {
+    return Math.round(y * factor.scaleY) + factor.paddingY;
+}
+
+function adjustRectOrientation(rect) {
+    if (iOS) {
+        return rect;
+    }
+    var u = {};
+    switch (factor.originalRotation) {
+        case 90:
+            u.height = rect.width;
+            u.width = rect.height;
+            u.left = factor.displayW - u.width - rect.top;
+            u.top = rect.left;
+            break;
+        case 180:
+            u.height = rect.height;
+            u.width = rect.width;
+            u.left = factor.displayW - u.width - rect.left;
+            u.top = factor.displayH - u.height - rect.top;
+            break;
+        case 270:
+            u.height = rect.width;
+            u.width = rect.height;
+            u.left = rect.top;
+            u.top = factor.displayH - u.height - rect.left;
+            break;
+        default:
+            u = rect;
+            break;
+    }
+    return u;
+}
+
+function adjustSpotOrientation(spot) {
+    if (iOS) {
+        return spot;
+    }
+    var u = {};
+    switch (factor.originalRotation) {
+        case 90:
+            u.x = factor.displayW - spot.y;
+            u.y = spot.x;
+            break;
+        case 180:
+            u.x = factor.displayW - spot.x;
+            u.y = factor.displayH - spot.y;
+            break;
+        case 270:
+            u.x = spot.y;
+            u.y = factor.displayH - spot.x;
+            break;
+        default:
+            u = spot;
+            break;
+    }
+    return u;
+}
+
+function scaleFace(face, factor) {
+    var f = {
+        faceId : face.faceId
+    };
+
+    if (face.faceRectangle) {
+        f.faceRectangle = adjustRectOrientation({
+            top: factorY(face.faceRectangle.top),
+            left: factorX(face.faceRectangle.left),
+            width: factorX(face.faceRectangle.width),
+            height: factorY(face.faceRectangle.height),
+        });
+    }
+    if (face.faceLandmarks) {
+        f.faceLandmarks = {};
+        for (var mark in face.faceLandmarks) {
+            f.faceLandmarks[mark] = adjustSpotOrientation({
+                x : factorX(face.faceLandmarks[mark].x),
+                y : factorY(face.faceLandmarks[mark].y)
+            });
+        }
+    }
+    if (face.attributes) {
+        f.attributes = {
+            age : face.attributes.age,
+            gender : face.attributes.gender
+        };
+        if (face.attributes.headPose) {
+            f.attributes.headPose = {
+                roll : face.attributes.headPose.roll,
+                yaw : face.attributes.headPose.yaw,
+                pitch : face.attributes.headPose.pitch
+            };
+        }
+    }
+    return f;
+}
+
 function drawFaceRects() {
-    var n, t;
-    if ($("#faces").html("<div><\/div>"), n = $("#imgObj"), t = $("#imgDiv"), current_faces != null) {
-        var i = n.height() / image_orig_height,
-            r = n.width() / image_orig_width,
-            u = n.offset().left - t.offset().left,
-            f = current_faces.length;
-        $.each(current_faces, function(t, e) {
-            var s = e.faceRectangle,
-                l = e.attributes.age,
-                a = e.attributes.gender,
-                o = {},
-                h, c;
-            o.top = Math.round(i * s.top);
-            o.height = Math.round(i * s.height);
-            o.left = Math.round(r * s.left) + u;
-            o.width = Math.round(r * s.width);
-            h = adjustRectOrientation(o, n.width(), n.height(), image_orig_rotation);
-            c = $("#faces");
-            add_rect(h, l, a, t, c, f)
+    if (current_faces != null) {
+        $("#faces").html("<div><\/div>");
+        var container = $("#faces");
+        $.each(current_faces, function(t, face) {
+            var f = scaleFace(face);
+            addFaceRectangle(f, container);
+            addFaceLandmarks(f, container);
         })
     }
 }
 
-function adjustRectOrientation(n, t, i, r) {
-    var u = {};
-    return iOS || r === 0 ? n : r === 270 ? (u.height = n.width, u.width = n.height, u.left = n.top, u.top = i - u.height - n.left, u) : r === 180 ? (u.height = n.height, u.width = n.width, u.left = t - u.width - n.left, u.top = i - u.height - n.top, u) : r === 90 ? (u.height = n.width, u.width = n.height, u.left = t - u.width - n.top, u.top = n.left, u) : n
+function renderImageFaces(faces, orientation) {
+    current_faces = faces;
+    updateOrigImageDimensions(orientation, drawFaceRects);
 }
 
-function renderImageFaces(n, t) {
-    current_faces = n;
-    updateOrigImageDimensions(drawFaceRects, t)
-}
-
-function updateOrigImageDimensions(n, t) {
-    var r = document.getElementById("imgObj"),
-        i = new Image;
+function updateOrigImageDimensions(orientation, callback) {
+    var r = document.getElementById("imgObj");
+    var i = new Image();
     i.onload = function() {
-        image_orig_width = iOS && (t === 270 || t === 90) ? i.height : i.width;
-        image_orig_height = iOS && (t === 270 || t === 90) ? i.width : i.height;
-        image_orig_rotation = t;
-        n()
+        factor.originalW = iOS && (orientation === 270 || orientation === 90) ? i.height : i.width;
+        factor.originalH = iOS && (orientation === 270 || orientation === 90) ? i.width : i.height;
+        factor.originalRotation = orientation;
+        var imgDiv = $("#imgDiv");
+        var imgObj = $("#imgObj");
+        factor.displayW = imgObj.width();
+        factor.displayH = imgObj.height();
+        factor.scaleY = factor.displayH / factor.originalH;
+        factor.scaleX = factor.displayW / factor.originalW;
+        factor.paddingX = imgObj.offset().left - imgDiv.offset().left;
+        factor.paddingY = imgObj.offset().top - imgDiv.offset().top;
+        callback();
     };
-    i.src = r.src
+    i.src = r.src;
 }
 
 function deleteFaceRects() {
@@ -145,13 +250,64 @@ function deleteFaceRects() {
     $("#faces").html("<div><\/div>")
 }
 
-function add_rect(n, t, i, r, u, f) {
-    var o = "rect" + Math.round(Math.random() * 1e4),
-        c = "n/a",
-        l;
-    t != null && (c = Math.round(Number(t)));
-    l = '<div data-html="true" " id="' + o + '"/>';
-    $(l).appendTo(u).css("left", n.left + "px").css("top", n.top + "px").css("width", n.width + "px").css("height", n.height + "px").css("border", "1px solid white").css("position", "absolute");
-};
+function addFaceRectangle(face, container) {
+    var pos = face.faceRectangle;
+    var txt = "";
+    if (face.attributes.gender && face.attributes.gender === "female") {
+        txt = "女";
+    } else {
+        txt = "男";
+    }
+    if (face.attributes.age) {
+        txt += Math.round(Number(face.attributes.age)) + "岁";
+    }
+    var faceDiv = '<div face-html="true" " id="' + face.faceId + '"/>';
+    $(faceDiv).appendTo(container)
+        .css("left", pos.left + "px")
+        .css("top", pos.top + "px")
+        .css("width", pos.width + "px")
+        .css("height", pos.height + "px")
+        .css("border", "1px solid white")
+        .css("position", "absolute");
+    if (txt != "") {
+        var tt = "<div>" + txt + "<\/div>";
+        $("#" + face.faceId).tooltip({
+            trigger: "manual",
+            show: true,
+            placement: "top",
+            title: tt,
+            html: true
+        }).tooltip("show");
+    }
+}
 
-
+function addFaceLandmarks(face, container) {
+    if (!face && !face.faceLandmarks) {
+        return;
+    }
+    var c = "malefacespot";
+    if (face.attributes.gender === "female") {
+        c = "femalefacespot";
+    }
+    for (var mark in face.faceLandmarks) {
+        var spotId = face.faceId + mark;
+        var spot = face.faceLandmarks[mark];
+        var div = '<div data-html="true" id="' + spotId + '"/>';
+        $(div).appendTo(container)
+            .css("left", spot.x + "px")
+            .css("top", spot.y + "px")
+            //.css("width", "1%")
+            //.css("height", "1%")
+            //.css("backgroundColor", "white")
+            .css("position", "absolute");
+        $("#" + spotId)
+            .addClass("facespot")
+            .addClass(c);
+        $("#" + spotId).tooltip({
+            show: true,
+            placement: "auto",
+            title: "<div>" + mark + "</div>",
+            html: true 
+        });
+    }
+}
