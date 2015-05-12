@@ -3,7 +3,7 @@ var PP = [
     "发", "额", "眉", "太阳", "睑", "睛", "瞳", "眼袋", "颧", "鼻", "耳", "颊", "颌" 
 ];
 
-var test = true;
+var test = false;
 var iOS = false;
 var imageReady = false;
 var current_faces = [];
@@ -106,12 +106,12 @@ function detectFace(img, md, orientation) {
 }
 
 
-function factorX(x) {
-    return Math.round(x * factor.scaleX) + factor.paddingX;
+function factorX(x, nopad) {
+    return Math.round(x * factor.scaleX) + (nopad ? 0 : factor.paddingX);
 }
 
-function factorY(y) {
-    return Math.round(y * factor.scaleY) + factor.paddingY;
+function factorY(y, nopad) {
+    return Math.round(y * factor.scaleY) + (nopad ? 0 : factor.paddingY);
 }
 
 function adjustRectOrientation(rect) {
@@ -179,8 +179,8 @@ function scaleFace(face, factor) {
         f.faceRectangle = adjustRectOrientation({
             top: factorY(face.faceRectangle.top),
             left: factorX(face.faceRectangle.left),
-            width: factorX(face.faceRectangle.width),
-            height: factorY(face.faceRectangle.height),
+            width: factorX(face.faceRectangle.width, true),
+            height: factorY(face.faceRectangle.height, true),
         });
     }
     if (face.faceLandmarks) {
