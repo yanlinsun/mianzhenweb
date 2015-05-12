@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Mian Zhen</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script src="faceservice.js" ></script>
+        <script src="main.js" ></script>
+        <script src="demo_js.js" ></script>
+        <script src="mock.js" ></script>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Mian Zhen Toy</h2>
+            <div class="row">
+                <div id="buttonGroup1" class="col-md-2 btn-group-vertical">
+                </div>
+                <div class="col-md-8">
+                    <div id="imageDiv" class="panel panel-default">
+                        <div class="panel-heading">Your Picture</div>
+                        <div class="panel-body" id="imgDiv">
+                            <span class="info">Select your picture</span>
+                            <img id="imgObj" src="" class="img-responsive"></img>
+                            <div id="faces"></div>
+                        </div>
+                        <div class="panel-footer">
+                            <input type="file" class="btn hidden" id="imgFile" accept="image/*" />
+                            <input type="button" class="btn btn-primary" value="Choose Your Picture" onclick="$('#imgFile').click();" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-danger" id="msg">
+            </div>
+        </div>
+    </body>
+</html>
