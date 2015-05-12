@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <title>Mian Zhen</title>
+        <title>面诊玩具</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
@@ -11,24 +11,39 @@
         <script src="main.js" ></script>
         <script src="demo_js.js" ></script>
         <script src="mock.js" ></script>
+        <style type="text/css">
+            .facespot {
+                width: 1%;
+                height: 1%;
+                position: absolute;
+                z-index: 98;
+            }
+
+            .malefacespot {
+                background: #13a3ee;
+            }
+
+            .femalefacespot {
+                background: #ba0b93;
+            }
+        </style>
     </head>
     <body>
         <div class="container">
-            <h2>Mian Zhen Toy</h2>
+            <h2>面诊玩具</h2>
             <div class="row">
                 <div id="buttonGroup1" class="col-md-2 btn-group-vertical">
                 </div>
                 <div class="col-md-8">
-                    <div id="imageDiv" class="panel panel-default">
-                        <div class="panel-heading">Your Picture</div>
-                        <div class="panel-body" id="imgDiv">
-                            <span class="info">Select your picture</span>
+                    <div id="imgDiv" class="panel panel-default">
+                        <div class="panel-heading">照片</div>
+                        <div class="panel-body">
                             <img id="imgObj" src="" class="img-responsive"></img>
                             <div id="faces"></div>
                         </div>
                         <div class="panel-footer">
                             <input type="file" class="btn hidden" id="imgFile" accept="image/*" />
-                            <input type="button" class="btn btn-primary" value="Choose Your Picture" onclick="$('#imgFile').click();" />
+                            <input type="button" class="btn btn-primary" value="选择照片" onclick="$('#imgFile').click();" />
                         </div>
                     </div>
                 </div>
