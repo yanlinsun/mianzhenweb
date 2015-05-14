@@ -1,10 +1,20 @@
 
-var PP = [
-    "发", "额", "眉", "睑", "睛", "瞳", "颧", "鼻", "耳", "颊", "颌" 
-];
+var PP = {
+    "forehead" : "额",
+    "nose" : "鼻", 
+    "philtrum" : "人中",
+    "lip" : "唇",
+    "jaw" : "颌",
+    "eyebrow" : "眉",
+    "eyelidUpper" : "睑",
+    "eye" : "眼",
+    "eyelidLower" : "眼袋",
+    "cheekUpper" : "颧", 
+    "cheekLower" : "颊" 
+};
 
-var mock = true;
-var debug = true;
+var mock = false;
+var debug = false;
 var iOS = false;
 var imageReady = false;
 var current_faces = [];
@@ -27,29 +37,31 @@ function error(msg) {
         $("#msg").fadeOut(3000);
 }
 
-function toggle(name) {
+function toggle(part) {
     if (!imageReady) {
         error("Image not ready");
     }
-    switch (name) {
-    }
+    $("polygon").hide();
+    $("polygon[part='" + part + "'").show();
 }
 
-function initButton(name) {
+function initButton(part, name) {
     return $("<button></button>").text(name)
         .addClass("btn btn-primary")
+        .attr("targetpart", part)
         .click(function() {
-            $(this).addClass("active")
+            $(this)
+                .addClass("active")
                 .siblings().removeClass("active");
-            toggle($(this).text());
+            toggle(part);
         });
 }
 
 function initButtons() {
     for (var i in PP) {
-        $("#buttonGroup1").append(initButton(PP[i]));
+        $("#buttonGroup1").append(initButton(i, PP[i]));
     }
-    $("#buttonGroup1").hide();
+//    $("#buttonGroup1").hide();
 }
 
 function imageSelected(e) {
@@ -390,41 +402,146 @@ function calcAngle(base, pos) {
 function drawFacePolygons(f) {
     if (f.calculatedFaceLandmarks) {
         var imgObj = $("#imgDiv");
+        var footer = $(".panel-footer");
         $("#svg").css("position", "absolute")
             .css("left", imgObj.offset().left)
             .css("top", imgObj.offset().top)
             .css("width", imgObj.width())
-            .css("height", imgObj.height());
+            .css("height", footer.offset().top - imgObj.offset().top);
 
         // jquery.appendTo or html container.appendChild not working for polygon, not knowing why
         // maybe the created polygon has no parent element
         var container = $("#svg");
         var o = f.calculatedFaceLandmarks;
+        var p = f.scaledFaceLandmarks;
         var polygons = [
-            newPolygon([
-                o["foreheadUpperLeft"],
-                o["foreheadLowerLeft"],
-                o["foreheadLowerRight"],
-                o["foreheadUpperRight"]
-            ]),
-            newPolygon([
-                o.cheekUpperOuterLeft,
-                o.cheekLowerOuterLeft,
-                o.cheekLowerTipLeft,
-                o.cheekLowerInnerLeft,
-                o.cheekUpperInnerLeft
-            ]),
+            newPolygon("forehead", [
+                    o.foreheadUpperLeft,
+                    o.foreheadLowerLeft,
+                    o.foreheadLowerRight,
+                    o.foreheadUpperRight
+                    ]),
+            newPolygon("nose", [
+                    p.eyebrowLeftInner,
+                    p.eyebrowRightInner,
+                    p.noseRootRight,
+                    p.noseRightAlarTop,
+                    p.noseRightAlarOutTip,
+                    p.noseTip,
+                    p.noseLeftAlarOutTip,
+                    p.noseLeftAlarTop,
+                    p.noseRootLeft,
+                    ]),
+            newPolygon("philtrum", [
+                    p.noseLeftAlarOutTip,
+                    p.noseTip,
+                    p.noseRightAlarOutTip,
+                    p.mouthRight,
+                    p.upperLipTop,
+                    p.mouthLeft
+                    ]),
+            newPolygon("lip", [
+                    p.mouthLeft,
+                    p.upperLipTop,
+                    p.mouthRight,
+                    p.underLipBottom
+                    ]),
+            newPolygon("jaw", [
+                    p.mouthLeft,
+                    p.underLipBottom,
+                    p.mouthRight,
+                    o.jawLowerRight,
+                    o.jawLowerLeft
+                    ]),
+            newPolygon("eyebrow", [
+                    p.eyebrowLeftOuter,
+                    o.eyebrowTopLeft,
+                    p.eyebrowLeftInner
+                    ]),
+            newPolygon("eyebrow", [
+                    p.eyebrowRightOuter,
+                    o.eyebrowTopRight,
+                    p.eyebrowRightInner
+                    ]),
+            newPolygon("eyelidUpper", [
+                    p.eyebrowLeftOuter,
+                    p.eyebrowLeftInner,
+                    p.eyeLeftInner,
+                    p.eyeLeftTop,
+                    p.eyeLeftOuter
+                    ]),
+            newPolygon("eyelidUpper", [
+                    p.eyebrowRightOuter,
+                    p.eyebrowRightInner,
+                    p.eyeRightInner,
+                    p.eyeRightTop,
+                    p.eyeRightOuter
+                    ]),
+            newPolygon("eye", [
+                    p.eyeLeftOuter,
+                    p.eyeLeftTop,
+                    p.eyeLeftInner,
+                    p.eyeLeftBottom
+                    ]),
+            newPolygon("eye", [
+                    p.eyeRightOuter,
+                    p.eyeRightTop,
+                    p.eyeRightInner,
+                    p.eyeRightBottom
+                    ]),
+            newPolygon("eyelidLower", [
+                    p.eyeLeftOuter,
+                    p.eyeLeftBottom,
+                    p.eyeLeftInner,
+                    o.eyelidLowerTipLeft
+                    ]),
+            newPolygon("eyelidLower", [
+                    p.eyeRightOuter,
+                    p.eyeRightBottom,
+                    p.eyeRightInner,
+                    o.eyelidLowerTipRight
+                    ]),
+            newPolygon("cheekUpper", [
+                    o.cheekUpperOuterLeft,
+                    o.cheekLowerOuterLeft,
+                    o.cheekLowerTipLeft,
+                    o.cheekLowerInnerLeft,
+                    o.cheekUpperInnerLeft
+                    ]),
+            newPolygon("cheekUpper", [
+                    o.cheekUpperOuterRight,
+                    o.cheekLowerOuterRight,
+                    o.cheekLowerTipRight,
+                    o.cheekLowerInnerRight,
+                    o.cheekUpperInnerRight
+                    ]),
+            newPolygon("cheekLower", [
+                    o.cheekUpperOuterLeft,
+                    o.cheekLowerOuterLeft,
+                    o.cheekLowerTipLeft,
+                    p.mouthLeft,
+                    o.jawLowerLeft,
+                    o.cheekBottomLeft
+                    ]),
+            newPolygon("cheekLower", [
+                    o.cheekUpperOuterRight,
+                    o.cheekLowerOuterRight,
+                    o.cheekLowerTipRight,
+                    p.mouthRight,
+                    o.jawLowerRight,
+                    o.cheekBottomRight
+                    ])
         ];
         container[0].innerHTML = polygons.join();
     }
 }
 
-function newPolygon(p) {
-    var html = "<polygon points=\"";
-    for (var i in p) {
-        html += p[i].x + "," + p[i].y + " ";
+function newPolygon(part, points) {
+    var html = "<polygon part=\"" + part + "\" points=\"";
+    for (var i in points) {
+        html += points[i].x + "," + points[i].y + " ";
     }
-    html += "\" style=\"fill:brown;opacity:0.5\" />";
+    html += "\" />";
     return html;
 }
 
