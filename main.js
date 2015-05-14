@@ -1,6 +1,6 @@
 
 var PP = [
-    "发", "额", "眉", "太阳", "睑", "睛", "瞳", "眼袋", "颧", "鼻", "耳", "颊", "颌" 
+    "发", "额", "眉", "睑", "睛", "瞳", "颧", "鼻", "耳", "颊", "颌" 
 ];
 
 var test = false;
@@ -66,7 +66,7 @@ function imageSelected(e) {
     reader.onload = function(e) {
         var dataURL = reader.result;
         $("#imgObj").attr("src", dataURL).show();
-        clearPP();
+        deleteFaceRects();
         loadImage.parseMetaData(e, function(t) {
                 var i = 0,
                     r;
@@ -80,7 +80,7 @@ function imageSelected(e) {
 $(function() {
     $("#msg").hide();
     $("#imgObj").hide();
-    initButtons();
+    //initButtons();
     $("#imgFile").change(imageSelected).click(function() { $(this).attr("value", null); });
 });
 
@@ -105,13 +105,12 @@ function detectFace(img, md, orientation) {
     }
 }
 
-
 function factorX(x, nopad) {
-    return Math.round(x * factor.scaleX) + (nopad ? 0 : factor.paddingX);
+    return x * factor.scaleX + (nopad ? 0 : factor.paddingX);
 }
 
 function factorY(y, nopad) {
-    return Math.round(y * factor.scaleY) + (nopad ? 0 : factor.paddingY);
+    return y * factor.scaleY + (nopad ? 0 : factor.paddingY);
 }
 
 function adjustRectOrientation(rect) {
@@ -205,7 +204,69 @@ function scaleFace(face, factor) {
             };
         }
     }
+    calcFaceParts(f);
     return f;
+}
+
+function calcFaceParts(f) {
+    f.parts = {};
+    var l = f.faceLandmarks["noseRootLeft"];
+    var r = f.faceLandmarks["noseRootRight"];
+    var angleB = calcAngle(l, r);
+    var base = f.faceLandmarks["noseTip"];
+    f.rotatedLandmarks = {
+        "noseTip" : base
+    };
+    for (var i in f.faceLandmarks) {
+        if (i !== "noseTip") {
+            f.rotatedLandmarks[i] = rotate2Vertical(base, angleB, f.faceLandmarks[i]);
+        }
+    }
+}
+
+function rotate2Vertical(base, angleB, pos) {
+    var d = Math.sqrt(Math.pow(pos.x - base.x, 2) + Math.pow(pos.y - base.y, 2));
+    var angleP = calcAngle(base, pos);
+    var sinP_B = angleP.sin * angleB.cos - angleP.cos * angleB.sin;
+    var cosP_B = angleP.cos * angleB.cos + angleP.sin * angleB.sin;
+    if (angleP.sin < angleB.sin) {
+        sinP_B = -sinP_B;
+    }
+    var offsetX = d * cosP_B;
+    var offsetY = d * sinP_B;
+    var r = {
+        x : base.x,
+        y : base.y
+    };
+    if (angleP.sin < angleB.sin) {
+        if (angleP.dX !== angleP.dY && angleP.dX === angleB.dX && angleB.dX !== angleB.dY) {
+            r.x += angleP.dX * offsetX;
+            r.y -= angleP.dY * offsetY;
+        } else {
+            r.x += angleP.dX * offsetX;
+            r.y += angleP.dY * offsetY;
+        }
+    } else if (angleP.sin > (1 - angleB.sin)) {
+        if (angleP.dX === angleP.dY && angleP.dX !== angleB.dX && angleB.dX !== angleB.dY) {
+            r.x -= angleP.dX * offsetX;
+            r.y += angleP.dY * offsetY;
+        } else {
+            r.x += angleP.dX * offsetX;
+            r.y += angleP.dY * offsetY;
+        }
+    }
+    return r;
+}
+
+function calcAngle(base, pos) {
+    var tan = Math.abs((pos.y - base.y) / (pos.x - base.x));
+    return {
+        dX : pos.x >= base.x,
+        dY : pos.y >= base.y,
+        tan : tan,
+        sin : tan / Math.sqrt(1 + Math.pow(tan, 2)),
+        cos : 1 / Math.sqrt(1 + Math.pow(tan, 2))
+    };
 }
 
 function drawFaceRects() {
@@ -215,7 +276,10 @@ function drawFaceRects() {
         $.each(current_faces, function(t, face) {
             var f = scaleFace(face);
             addFaceRectangle(f, container);
-            addFaceLandmarks(f, container);
+            addFaceLandmarks(f.faceLandmarks, container, (f.attributes.gender === "female" ? "femalefacespot" : "malefacespot"));
+//            if (f.rotatedLandmarks) {
+//                addFaceLandmarks(f.rotatedLandmarks, container, "rotatefacespot");
+//            }
         })
     }
 }
@@ -281,33 +345,24 @@ function addFaceRectangle(face, container) {
     }
 }
 
-function addFaceLandmarks(face, container) {
-    if (!face && !face.faceLandmarks) {
+function addFaceLandmarks(landmarks, container, c) {
+    if (!landmarks) {
         return;
     }
-    var c = "malefacespot";
-    if (face.attributes.gender === "female") {
-        c = "femalefacespot";
-    }
-    for (var mark in face.faceLandmarks) {
-        var spotId = face.faceId + mark;
-        var spot = face.faceLandmarks[mark];
-        var div = '<div data-html="true" id="' + spotId + '"/>';
+    for (var mark in landmarks) {
+        var spot = landmarks[mark];
+        var div = '<div data-html="true"/>';
         $(div).appendTo(container)
             .css("left", spot.x + "px")
             .css("top", spot.y + "px")
-            //.css("width", "1%")
-            //.css("height", "1%")
-            //.css("backgroundColor", "white")
-            .css("position", "absolute");
-        $("#" + spotId)
+            .css("position", "absolute")
             .addClass("facespot")
-            .addClass(c);
-        $("#" + spotId).tooltip({
-            show: true,
-            placement: "auto",
-            title: "<div>" + mark + "</div>",
-            html: true 
-        });
+            .addClass(c)
+            .tooltip({
+                show: true,
+                placement: "auto",
+                title: "<div>" + mark + "</div>",
+                html: true 
+            });
     }
 }
