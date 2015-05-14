@@ -1,5 +1,5 @@
 var FaceService = function(subscriptKey) {
-    this.serviceHost = "https://api.projectoxford.ai/face/v0/detections?analyzesFaceLandmarks=true&analyzesAge=true&analyzesGender=true&analyzesHeadPost=true";
+    this.serviceHost = "https://api.projectoxford.ai/face/v0/detections?analyzesFaceLandmarks=true&analyzesAge=true&analyzesGender=true&analyzesHeadPose=true";
     this.subscriptKey = subscriptKey;
 };
 

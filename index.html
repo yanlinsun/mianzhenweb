@@ -4,9 +4,9 @@
         <title>面诊玩具</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-        <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="bootstrap.min.css">
+        <script src="jquery-1.11.2.min.js"></script>
+        <script src="bootstrap.min.js"></script>
         <script src="faceservice.js" ></script>
         <script src="main.js" ></script>
         <script src="demo_js.js" ></script>
@@ -26,6 +26,10 @@
             .femalefacespot {
                 background: #ba0b93;
             }
+
+            .rotatefacespot {
+                background: lime;
+            }
         </style>
     </head>
     <body>
@@ -34,8 +38,8 @@
             <div class="row">
                 <div id="buttonGroup1" class="col-md-2 btn-group-vertical">
                 </div>
-                <div class="col-md-8">
-                    <div id="imgDiv" class="panel panel-default">
+                <div id="imgDiv" class="col-md-8">
+                    <div class="panel panel-default">
                         <div class="panel-heading">照片</div>
                         <div class="panel-body">
                             <img id="imgObj" src="" class="img-responsive"></img>
