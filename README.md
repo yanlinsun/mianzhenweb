@@ -1,9 +1,9 @@
 # Face Diagnose Toy
 
-It is a project that I used to learn jQuery and Bootstrap.
-This tool is inspired by the [How-Old.net](http://how-old.net). 
-It is to detect face portions. E.g. forehead, jaw, etc. 
+It is a project that I used to learn and practice jQuery and Bootstrap.
+This tool is inspired by the [How-Old.net](http://how-old.net).
 It uses Microsoft Azure Face API.
+It calculates the face portions, like forehead, eye, jaw, by the detected face elements points from Face API result. 
 
 **How to use**
 
