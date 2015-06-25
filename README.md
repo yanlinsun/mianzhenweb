@@ -5,7 +5,7 @@ This tool is inspired by the [How-Old.net](http://how-old.net).
 It is to detect face portions. E.g. forehead, jaw, etc. 
 It uses Microsoft Azure Face API.
 
-** How to use **
+**How to use**
 
 1. Select a picture from your local computer. 
 
@@ -16,7 +16,7 @@ It uses Microsoft Azure Face API.
 
 3. You can check each single portion by left side buttons
  
-Developed in:
+**Tools and Technologies**
 * HTML5
 * JavaScript
 * jQuery
