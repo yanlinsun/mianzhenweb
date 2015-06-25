@@ -1,16 +1,16 @@
 
 var PP = {
-    "forehead" : "额",
-    "nose" : "鼻", 
-    "philtrum" : "人中",
-    "lip" : "唇",
-    "jaw" : "颌",
-    "eyebrow" : "眉",
-    "eyelidUpper" : "睑",
-    "eye" : "眼",
-    "eyelidLower" : "眼袋",
-    "cheekUpper" : "颧", 
-    "cheekLower" : "颊" 
+    "forehead" : "Forehead",
+    "nose" : "Nose", 
+    "philtrum" : "Philtrum",
+    "lip" : "Lips",
+    "jaw" : "Jaw",
+    "eyebrow" : "Eyebrow",
+    "eyelidUpper" : "Upper Eyelid",
+    "eye" : "Eye Ball",
+    "eyelidLower" : "Lower Eyelid",
+    "cheekUpper" : "Upper Cheek", 
+    "cheekLower" : "Lower Cheek" 
 };
 
 var mock = false;
@@ -96,7 +96,7 @@ $(function() {
 });
 
 function detectFace(img, md, orientation) {
-    var errSize = "图片需要大小小于3MB。";
+    var errSize = "Image size limit is 3MB.";
     if (md != null && md.size > 3145728) {
         error(errSize);
     }
@@ -603,12 +603,12 @@ function addFaceRectangle(face, container) {
     var pos = face.scaledFaceRectangle;
     var txt = "";
     if (face.attributes.gender && face.attributes.gender === "female") {
-        txt = "女";
+        txt = "Female";
     } else {
-        txt = "男";
+        txt = "Male";
     }
     if (face.attributes.age) {
-        txt += Math.round(Number(face.attributes.age)) + "岁";
+        txt += Math.round(Number(face.attributes.age));
     }
     var faceDiv = '<div face-html="true" " id="' + face.faceId + '"/>';
     $(faceDiv).appendTo(container)
